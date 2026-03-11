@@ -12,7 +12,7 @@ from skills.pdd_api_skill import PddApiSkill
 from agents.product_selector import ProductSelector
 from agents.product_operator import ProductOperator
 from agents.copywriter import Copywriter
-from database import Database
+from database_new import Database
 from models import CopyResult
 
 load_dotenv()
