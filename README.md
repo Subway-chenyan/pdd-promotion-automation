@@ -113,6 +113,68 @@ langchain_pdd/
 3. API 调用有频率限制（建议 < 50次/分钟）
 4. LLM API 需要自行配置
 
+## 部署到 Streamlit Cloud
+
+### 前置准备
+
+1. 注册 [Supabase](https://supabase.com) 并创建项目
+2. 在 Supabase SQL Editor 中运行以下 SQL 创建表：
+
+```sql
+CREATE TABLE IF NOT EXISTS generation_history (
+    id SERIAL PRIMARY KEY,
+    keywords TEXT NOT NULL,
+    goods_count INTEGER NOT NULL,
+    result_json TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS prompt_templates (
+    id SERIAL PRIMARY KEY,
+    agent_name VARCHAR(50) NOT NULL,
+    template_name VARCHAR(100) NOT NULL,
+    system_prompt TEXT NOT NULL,
+    user_prompt_template TEXT NOT NULL,
+    is_default BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS goods_cache (
+    goods_sign VARCHAR(100) PRIMARY KEY,
+    goods_data TEXT NOT NULL,
+    cached_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+3. 获取 Supabase DATABASE_URL (Project Settings → Database → Connection string)
+
+### 部署步骤
+
+1. 注册 [Streamlit Cloud](https://streamlit.io/cloud)
+2. 点击 "New app"
+3. 连接你的 GitHub 仓库
+4. 选择主分支
+5. Main file path: `frontend.py`
+6. 在 "Secrets" 中添加以下环境变量：
+
+```
+LLM_API_KEY=your_api_key_here
+LLM_BASE_URL=https://api.openai.com/v1
+LLM_MODEL=gpt-4o-mini
+PDD_CLIENT_ID=your_client_id_here
+PDD_CLIENT_SECRET=your_client_secret_here
+PDD_PID=your_pid_here
+DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.xxx.supabase.co:5432/postgres
+```
+
+7. 点击 "Deploy"
+
+### 部署后
+
+- 应用会在每次 push 到主分支时自动重新部署
+- 可在 Streamlit Cloud 查看应用日志
+- 免费版限制: 每月 750 小时运行时间
+
 ## 许可证
 
 MIT License
