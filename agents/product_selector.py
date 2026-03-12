@@ -39,7 +39,7 @@ class ProductSelector(BaseAgent):
             "sort_type": 9,  # 按券后价升序
         },
     }
-na
+
     def __init__(
         self,
         pdd_skill: PddApiSkill,
