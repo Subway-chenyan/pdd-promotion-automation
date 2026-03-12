@@ -1,9 +1,7 @@
 """
 主协调器 - 顺序调用三个Agent（带完整追踪）
 """
-import os
 from typing import List, Dict, Any, Optional
-from dotenv import load_dotenv
 
 # 导入追踪相关模块
 from langsmith import traceable
@@ -14,8 +12,7 @@ from agents.product_operator import ProductOperator
 from agents.copywriter import Copywriter
 from database_new import Database
 from models import CopyResult
-
-load_dotenv()
+from config import get_pdd_config, get_database_url
 
 
 class Coordinator:
@@ -25,11 +22,12 @@ class Coordinator:
         self,
         custom_prompts: Optional[Dict[str, Dict[str, str]]] = None,
     ):
-        # 初始化PDD API Skill
+        # 初始化PDD API Skill - 使用统一配置加载器
+        pdd_config = get_pdd_config()
         self.pdd_skill = PddApiSkill(
-            client_id=os.getenv("PDD_CLIENT_ID", ""),
-            client_secret=os.getenv("PDD_CLIENT_SECRET", ""),
-            pid=os.getenv("PDD_PID", ""),
+            client_id=pdd_config["client_id"],
+            client_secret=pdd_config["client_secret"],
+            pid=pdd_config["pid"],
         )
 
         # 初始化三个Agent
@@ -41,8 +39,8 @@ class Coordinator:
         if custom_prompts:
             self._apply_custom_prompts(custom_prompts)
 
-        # 数据库
-        self.db = Database(db_path=os.getenv("DB_PATH", "data/pdd.db"))
+        # 数据库 - 使用统一配置加载器
+        self.db = Database(database_url=get_database_url())
 
     def _apply_custom_prompts(self, custom_prompts: Dict[str, Dict[str, str]]):
         """应用自定义提示词"""

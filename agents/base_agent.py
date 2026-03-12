@@ -8,10 +8,12 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.output_parsers import StrOutputParser
 from langsmith import traceable
-import os
-from dotenv import load_dotenv
 
-load_dotenv()
+# 使用统一配置加载器，支持 Streamlit Cloud Secrets
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from config import get_llm_config
 
 
 class BaseAgent(ABC):
@@ -24,15 +26,13 @@ class BaseAgent(ABC):
         user_prompt_template: str = "",
     ):
         if llm is None:
-            # 创建默认LLM
-            api_key = os.getenv("LLM_API_KEY")
-            base_url = os.getenv("LLM_BASE_URL")
-            model = os.getenv("LLM_MODEL", "gpt-4o-mini")
+            # 创建默认LLM - 使用统一配置加载器
+            llm_config = get_llm_config()
 
             llm = ChatOpenAI(
-                api_key=api_key,
-                base_url=base_url,
-                model=model,
+                api_key=llm_config["api_key"],
+                base_url=llm_config["base_url"],
+                model=llm_config["model"],
                 temperature=0.7,
             )
 
