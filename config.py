@@ -47,7 +47,13 @@ def get_config(
     except ImportError:
         st = None
 
-    # 1. 尝试从 Streamlit Secrets 读取 (嵌套格式)
+    # 1. 首先尝试环境变量 (最高优先级，用于本地开发和覆盖)
+    env_key = f"{section.upper()}_{key.upper()}" if section else key.upper()
+    env_value = os.getenv(env_key)
+    if env_value is not None:
+        return env_value
+
+    # 2. 尝试从 Streamlit Secrets 读取
     if st is not None and hasattr(st, 'secrets'):
         secrets = st.secrets
 
@@ -58,15 +64,17 @@ def get_config(
                 return section_data[key]
 
         # 尝试扁平访问: secrets.LLM_API_KEY
-        env_key = f"{section.upper()}_{key.upper()}" if section else key.upper()
         if env_key in secrets:
             return secrets[env_key]
 
-    # 2. 回退到环境变量 (扁平格式)
-    env_key = f"{section.upper()}_{key.upper()}" if section else key.upper()
-    value = os.getenv(env_key, default)
+        # 尝试直接用 section.key 格式访问
+        if section:
+            direct_key = f"{section}.{key}"
+            if direct_key in secrets:
+                return secrets[direct_key]
 
-    return value
+    # 3. 返回默认值
+    return default
 
 
 # LLM 配置快捷方法
@@ -92,4 +100,9 @@ def get_pdd_config() -> dict:
 # 数据库配置快捷方法
 def get_database_url(default: str = "sqlite:///data/pdd.db") -> str:
     """获取数据库 URL"""
-    return get_config("url", "database", default)
+    url = get_config("url", "database", default)
+
+    # 调试：打印数据库 URL（在 Streamlit Cloud 中会显示在日志中）
+    print(f"[DEBUG] Database URL: {url[:20]}...{url[-10:] if len(url) > 30 else url}")
+
+    return url

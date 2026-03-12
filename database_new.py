@@ -60,9 +60,35 @@ class Database:
         if database_url is None:
             database_url = _get_database_url()
 
+        # 打印数据库连接信息（隐藏敏感信息）
+        print(f"[Database] Connecting to: {self._mask_url(database_url)}")
+
+        # PostgreSQL 连接参数
+        if database_url.startswith("postgresql://") or database_url.startswith("postgres://"):
+            # 添加 SSL 模式（Supabase 需要）
+            if "sslmode" not in database_url:
+                database_url += "?sslmode=require"
+
         self.engine = create_engine(database_url, pool_pre_ping=True)
         self.SessionLocal = sessionmaker(bind=self.engine)
         self._init_db()
+
+    @staticmethod
+    def _mask_url(url: str) -> str:
+        """隐藏数据库 URL 中的敏感信息"""
+        if "://" not in url:
+            return url
+        # 隐藏密码部分
+        parts = url.split("://")
+        if len(parts) == 2:
+            scheme, rest = parts
+            if "@" in rest:
+                auth, host = rest.split("@", 1)
+                if ":" in auth:
+                    user, _ = auth.split(":", 1)
+                    return f"{scheme}://{user}:***@{host}"
+            return f"{scheme}://***@{rest.split('@')[1] if '@' in rest else rest}"
+        return url[:20] + "..."
 
     def _get_session(self) -> Session:
         """获取数据库会话"""
