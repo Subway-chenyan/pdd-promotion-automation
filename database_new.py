@@ -8,6 +8,7 @@ from datetime import datetime
 from sqlalchemy import create_engine, Column, Integer, String, Text, Boolean, DateTime, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.pool import QueuePool
 from models import GenerationResult, PromptTemplate
 
 
@@ -63,13 +64,36 @@ class Database:
         # 打印数据库连接信息（隐藏敏感信息）
         print(f"[Database] Connecting to: {self._mask_url(database_url)}")
 
-        # PostgreSQL 连接参数
+        # PostgreSQL 连接参数优化
         if database_url.startswith("postgresql://") or database_url.startswith("postgres://"):
-            # 添加 SSL 模式（Supabase 需要）
-            if "sslmode" not in database_url:
-                database_url += "?sslmode=require"
+            # 添加连接参数，确保与 Supabase 兼容
+            separator = "&" if "?" in database_url else "?"
+            params = {
+                "sslmode": "require",  # Supabase 需要 SSL
+                "connect_timeout": "10",  # 连接超时
+            }
 
-        self.engine = create_engine(database_url, pool_pre_ping=True)
+            # 添加缺失的参数
+            for key, value in params.items():
+                if key not in database_url.lower():
+                    database_url += f"{separator}{key}={value}"
+                    separator = "&"
+
+            # 创建 engine，带连接池配置
+            self.engine = create_engine(
+                database_url,
+                pool_pre_ping=True,
+                poolclass=QueuePool,
+                pool_size=5,
+                max_overflow=10,
+                pool_timeout=30,
+                pool_recycle=3600,  # 1小时后回收连接
+                echo=False,
+            )
+        else:
+            # SQLite 或其他数据库
+            self.engine = create_engine(database_url, pool_pre_ping=True)
+
         self.SessionLocal = sessionmaker(bind=self.engine)
         self._init_db()
 
