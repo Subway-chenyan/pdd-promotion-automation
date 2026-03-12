@@ -20,16 +20,16 @@ load_dotenv()
 
 
 def get_config(
-    section: Optional[str] = None,
     key: str,
+    section: Optional[str] = None,
     default: Optional[Any] = None,
 ) -> Optional[Any]:
     """
     获取配置值，支持 Streamlit Cloud Secrets 和 .env 文件
 
     Args:
-        section: 配置节名称 (如 "llm", "pdd", "database")，用于嵌套格式
         key: 配置键名 (如 "api_key", "client_id")
+        section: 配置节名称 (如 "llm", "pdd", "database")，用于嵌套格式
         default: 默认值
 
     Returns:
@@ -37,10 +37,10 @@ def get_config(
 
     Examples:
         # 嵌套格式: [llm] api_key = "sk-..."
-        get_config("llm", "api_key") -> "sk-..."
+        get_config("api_key", "llm") -> "sk-..."
 
         # 扁平格式: LLM_API_KEY=sk-...
-        get_config(key="api_key", env_prefix="LLM_") -> "sk-..."
+        get_config("api_key", "LLM") -> "sk-..."
     """
     try:
         import streamlit as st
@@ -73,9 +73,9 @@ def get_config(
 def get_llm_config() -> dict:
     """获取 LLM 配置"""
     return {
-        "api_key": get_config("llm", "api_key", ""),
-        "base_url": get_config("llm", "base_url", ""),
-        "model": get_config("llm", "model", "gpt-4o-mini"),
+        "api_key": get_config("api_key", "llm", ""),
+        "base_url": get_config("base_url", "llm", ""),
+        "model": get_config("model", "llm", "gpt-4o-mini"),
     }
 
 
@@ -83,13 +83,13 @@ def get_llm_config() -> dict:
 def get_pdd_config() -> dict:
     """获取拼多多 API 配置"""
     return {
-        "client_id": get_config("pdd", "client_id", ""),
-        "client_secret": get_config("pdd", "client_secret", ""),
-        "pid": get_config("pdd", "pid", ""),
+        "client_id": get_config("client_id", "pdd", ""),
+        "client_secret": get_config("client_secret", "pdd", ""),
+        "pid": get_config("pid", "pdd", ""),
     }
 
 
 # 数据库配置快捷方法
 def get_database_url(default: str = "sqlite:///data/pdd.db") -> str:
     """获取数据库 URL"""
-    return get_config("database", "url", default)
+    return get_config("url", "database", default)
