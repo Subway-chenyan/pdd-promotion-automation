@@ -1,6 +1,13 @@
 """
 Base Agent（带完整追踪）
 """
+# 首先设置路径，确保能导入 config 模块
+import sys
+import os
+_project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _project_root not in sys.path:
+    sys.path.insert(0, _project_root)
+
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional
 from langchain_openai import ChatOpenAI
@@ -8,11 +15,6 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.output_parsers import StrOutputParser
 from langsmith import traceable
-
-# 使用统一配置加载器，支持 Streamlit Cloud Secrets
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import get_llm_config
 
 
