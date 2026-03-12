@@ -1,6 +1,7 @@
 """
 数据库操作 - SQLAlchemy + PostgreSQL
 """
+import os
 import json
 from typing import List, Optional
 from datetime import datetime
@@ -8,7 +9,12 @@ from sqlalchemy import create_engine, Column, Integer, String, Text, Boolean, Da
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from models import GenerationResult, PromptTemplate
-from config import get_database_url
+
+
+def _get_database_url(default: str = "sqlite:///data/pdd.db") -> str:
+    """获取数据库 URL（懒加载）"""
+    from config import get_database_url
+    return get_database_url(default)
 
 Base = declarative_base()
 
@@ -52,7 +58,7 @@ class Database:
 
     def __init__(self, database_url: str = None):
         if database_url is None:
-            database_url = get_database_url()
+            database_url = _get_database_url()
 
         self.engine = create_engine(database_url, pool_pre_ping=True)
         self.SessionLocal = sessionmaker(bind=self.engine)

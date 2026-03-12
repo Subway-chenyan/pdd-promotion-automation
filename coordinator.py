@@ -12,7 +12,18 @@ from agents.product_operator import ProductOperator
 from agents.copywriter import Copywriter
 from database_new import Database
 from models import CopyResult
-from config import get_pdd_config, get_database_url
+
+
+def _get_pdd_config():
+    """获取 PDD 配置（懒加载）"""
+    from config import get_pdd_config
+    return get_pdd_config()
+
+
+def _get_database_url():
+    """获取数据库 URL（懒加载）"""
+    from config import get_database_url
+    return get_database_url()
 
 
 class Coordinator:
@@ -22,8 +33,8 @@ class Coordinator:
         self,
         custom_prompts: Optional[Dict[str, Dict[str, str]]] = None,
     ):
-        # 初始化PDD API Skill - 使用统一配置加载器
-        pdd_config = get_pdd_config()
+        # 初始化PDD API Skill - 使用统一配置加载器（懒加载）
+        pdd_config = _get_pdd_config()
         self.pdd_skill = PddApiSkill(
             client_id=pdd_config["client_id"],
             client_secret=pdd_config["client_secret"],
@@ -39,8 +50,8 @@ class Coordinator:
         if custom_prompts:
             self._apply_custom_prompts(custom_prompts)
 
-        # 数据库 - 使用统一配置加载器
-        self.db = Database(database_url=get_database_url())
+        # 数据库 - 使用统一配置加载器（懒加载）
+        self.db = Database(database_url=_get_database_url())
 
     def _apply_custom_prompts(self, custom_prompts: Dict[str, Dict[str, str]]):
         """应用自定义提示词"""
